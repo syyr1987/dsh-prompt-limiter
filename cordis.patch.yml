@@ -1,0 +1,52 @@
+# dsh-prompt-limiter bundle patch：往 profile 里插入一行宿主插件。
+#
+# 这一行由 dsh 的 loader 在 profile 启动时合并：name 从 profile 自己的
+# node_modules 解析（本地开发用 link:/file:，发布后用 npm 名字）。
+#
+# 限额本身不写在这里 —— 运行时在「设置 → 插件 → 提示词控制器」里改，
+# 落在 $DSH_HOME/storages/prompt-limiter/limits.json。
+# 这里只放初始默认值（可省；省掉即「只观测、不改写」）。
+# 重复挂载保护：两条同名行会让 /prompt-limiter 前缀路由注册两次，整个插件树
+# 在启动时失败（"duplicate prefix route"）。若 profile 里已经有另一条启用中的
+# dsh-prompt-limiter 行，这一行自动退避（加载器按行序处理：早于本行的行可见）。
+- insert:
+    - id: prompt-limiter
+      name: dsh-prompt-limiter
+      disabled: !!js "typeof ctx.loader !== 'undefined' && [...ctx.loader.entries()].some((e) => e.options.name === 'dsh-prompt-limiter' && e.options.id !== 'prompt-limiter' && !e.disabled)"
+      config:
+        # warn = 只记录越限（默认，绝不改写提示词）
+        # truncate = 按上限截断超限段落
+        # drop = 丢掉超限段落
+        action: warn
+        # 系统提示词总字符上限；null = 不限制
+        totalChars: null
+        # 逐段上限，键为段落名（systemPrompt.section 注册时用的 name）；
+        # 特殊键 "*" 作为未点名段落的兜底上限
+        sections: {}
+        # 暴露 prompt_size_report 工具给 Agent 自己查
+        tool: true
+        # 暴露 /prompt-limiter 路由给 Web 设置页（含点开看正文的 /text）
+        route: true
+        # 留存「具体提示词」原文，供界面上点开查看（默认开；false = 只留体量、不留正文）
+        text: true
+        # 配了任何一条上限时，注入「提示词预算」上下文告诉模型上限与申请通道
+        # （不知道上限的模型不会主动压缩——这是这个功能的闭环）
+        budgetNotice: true
+        # 「动态回写」判定前缀（实测波动优先于它）：记忆/素材包/索引一类。
+        # 上限默认对着这一类；静态段落与工具 schema 不该被随手裁。
+        dynamic:
+          - 'soul:memory'
+          - memory
+          - 'mem:'
+          - material
+          - index
+          - assembled
+          - warm
+          - cold
+          - episodic
+          - cache
+          - skill
+        # 来源映射：名字 → 插件名（你写死的最强，覆盖扫描与前缀推定）
+        provenance: {}
+        # 来源备注：名字 → 一句说明（例如「内容由 X 写入」），只用于显示
+        provenanceNotes: {}

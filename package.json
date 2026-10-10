@@ -1,0 +1,47 @@
+{
+  "name": "dsh-prompt-limiter",
+  "version": "0.2.0",
+  "description": "提示词控制器：查看各方（每个 Agent / 子智能体）系统提示词的大小——按静态段落、运行时上下文、工具 schema 分类的字符数与 ≈token 估算，并可为单段或整体设置自定义上限（只观测 / 截断 / 丢弃）。零依赖、无构建步骤。Prompt size controller for DeepSeek Harness: inspect every party's assembled system prompt (static sections, runtime contexts, tool schemas) in characters and estimated tokens, and set custom per-section or total limits with warn / truncate / drop actions. Zero dependencies, no build step.",
+  "type": "module",
+  "main": "lib/host.js",
+  "exports": {
+    ".": "./lib/host.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "files": [
+    "lib",
+    "test",
+    "cordis.patch.yml",
+    "README.md",
+    "INSTALL.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/run.mjs && node test/integration.mjs && node test/render.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "system-prompt",
+    "prompt-size",
+    "context-budget",
+    "token-budget",
+    "observability"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
